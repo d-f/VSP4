@@ -15,7 +15,10 @@ import java.util.Random;
  */
 public class Empfaenger extends Thread{
     private Connection connection;
+
     private long aktuelleFrameNummer;
+    private long aktuelleSlotNummer;
+
     private boolean[] freieSlots;
     private long abweichung;
 
@@ -23,6 +26,7 @@ public class Empfaenger extends Thread{
         this.connection = connection;
         this.freieSlots = new boolean[25];
         this.aktuelleFrameNummer = System.currentTimeMillis() / 1000;
+        this.aktuelleSlotNummer = 0;
         Arrays.fill(freieSlots, true);
         this.abweichung = 0;
         start();
@@ -30,42 +34,43 @@ public class Empfaenger extends Thread{
 
     public void run() {
         while (true){
-            if ((System.currentTimeMillis() + abweichung / 1000) >= aktuelleFrameNummer){
+            //byte[] msg = connection.receive();
+            Nachricht nachricht = new Nachricht(connection.receive());
+
+            // freie Slots fuer Reservierung zuruecksetzen wenn Frame zuende
+            if (aktuelleFrameNummer < (System.currentTimeMillis() + abweichung / 1000)){
                 Arrays.fill(freieSlots, true);
-                aktuelleFrameNummer = (System.currentTimeMillis() + abweichung / 1000);
-                DataSink.gibAus("Neuer Frame: " + aktuelleFrameNummer);
             }
 
-            byte[] msg = connection.receive();
-            String nachrichtenKopf = new String(getTeilVonByteArray(msg, 0, 10));
-            char stationsKlasse = (char)msg[24];
-            int reservierterSlot = msg[25] & 0xFF;
-            long sendezeitpunkt = ByteBuffer.wrap(msg).getLong(26);
+            long empfangszeitpunkt = System.currentTimeMillis() + abweichung;
 
-
-            if (stationsKlasse == 'A'){
-                abweichung = ((System.currentTimeMillis() - sendezeitpunkt)  + abweichung) / 2;
+            // wenn gleicher Frame
+            if (aktuelleFrameNummer == empfangszeitpunkt / 1000){
+                // und Slot
+                if (aktuelleSlotNummer == (empfangszeitpunkt % 1000) / 40){
+                    // dann Kollision
+                    DataSink.gibAus("kollision im Frame: " + aktuelleFrameNummer + " Slot: " + aktuelleSlotNummer);
+                    // Nachricht nicht auswerten und Rest ueberspringen
+                    continue;
+                }
             }
 
-            freieSlots[reservierterSlot] = false;
+            aktuelleFrameNummer = System.currentTimeMillis() + abweichung / 1000;
+            aktuelleSlotNummer = ((System.currentTimeMillis() + abweichung) % 1000) / 40;
 
-            String ausgabe = "<Empfaenger> Nachricht: {" + nachrichtenKopf.toString() + " " + stationsKlasse + " " + reservierterSlot
-                    + " " + sendezeitpunkt + "} empfangen um: " + (System.currentTimeMillis() + abweichung)
-                    + " im Slot: " + (((System.currentTimeMillis() + abweichung) % 1000)/40) + " Abweichung:" + abweichung;
+            // Akktualisierung der Abweichung wenn Nachricht von Station A
+            if (nachricht.getStationsKlasse() == 'A'){
+                abweichung = ((System.currentTimeMillis() - nachricht.getSendezeit())  + abweichung) / 2;
+            }
 
-            DataSink.gibAus(ausgabe);
+            freieSlots[nachricht.getReserviertenSlot()] = false;
 
-
+            DataSink.gibAus(nachricht.toString("<Empfaenger> emfpangen"));
         }
-
     }
 
     public long getAbweichung(){
         return abweichung;
-    }
-
-    private byte[] getTeilVonByteArray(byte[] daten, int ab, int lenge) {
-        return ByteBuffer.allocate(lenge).order(ByteOrder.BIG_ENDIAN).put(daten, ab, lenge).array();
     }
 
     public int getFreienSlot() {

@@ -10,9 +10,9 @@ import java.nio.ByteBuffer;
  * Time: 12:28
  * To change this template use File | Settings | File Templates.
  */
-public class Station extends Thread{
+public class Station extends Thread {
     private Connection connection;
-    private InputReader nutzdatenEmpfaenger;
+    private Nutzdaten nutzdatenEmpfaenger;
     private Empfaenger empfaenger;
     private char stationsKlasse;
     private int sendeSlot;
@@ -21,7 +21,7 @@ public class Station extends Thread{
         this.stationsKlasse = stationsKlasse;
         this.connection = server;
         this.empfaenger = empfaenger;
-        this.nutzdatenEmpfaenger = new InputReader();
+        this.nutzdatenEmpfaenger = new Nutzdaten();
         this.sendeSlot = Integer.MIN_VALUE;
     }
 
@@ -36,53 +36,44 @@ public class Station extends Thread{
         }
 
         while (true) {
-            Integer freierSlot = empfaenger.getFreienSlot();
 
-            if (sendeSlot == Integer.MIN_VALUE){
+            if (sendeSlot == Integer.MIN_VALUE) {
                 sendeSlot = empfaenger.getFreienSlot();
             }
+
             long abweichung = empfaenger.getAbweichung();
-            byte[] nutzdaten = nutzdatenEmpfaenger.getNutzdaten();
 
-            //byte[] nutzdaten = "team 06-01".getBytes();
-
-            byte[] msg = new byte[34];
-            //kopieren von Nutzdaten
-            for (int i = 0; i < nutzdaten.length; i++){
-                try {
-                    msg[i] = nutzdaten[i];
-                } catch (IndexOutOfBoundsException e) {
-                    break;
-                }
-            }
-            //kopieren von Stationsklasse
-            msg[24] = (byte)stationsKlasse;
-            msg[25] = freierSlot.byteValue();
+            Nachricht nachricht = new Nachricht(new byte[34]);
+            nachricht.setNutzdaten(nutzdatenEmpfaenger.getNutzdaten());
+            nachricht.setStationsKlasse(stationsKlasse);
 
             try {
+                // Zeit bis zum Senden Schlafen
                 sleep(sendeSlot * 40 + abweichung + 20);
             } catch (InterruptedException e) {
                 e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
             }
 
-            Long sendezeitpunkt = System.currentTimeMillis() + abweichung;
-            byte[] szp = ByteBuffer.allocate(8).putLong(sendezeitpunkt).array();
+            nachricht.setSendezeitpunkt(System.currentTimeMillis() + abweichung);
 
-            for (int i = 26; i < msg.length; i++){
-                msg[i] = szp[i-26];
+            Integer freierSlot = empfaenger.getFreienSlot();
+            nachricht.setReservierterSlot(freierSlot);
+
+            if (freierSlot == Integer.MIN_VALUE) {
+                // keine Slots im aktuellen Frame verfuegbar, ueberspringen
+                continue;
             }
+            connection.send(nachricht.getBytes());
+            DataSink.gibAus(nachricht.toString("<Station> gesendet"));
 
-
-            connection.send(msg);
-            String augabe = ("<Station> sende Nachricht: {" + new String(nutzdaten) + " " + stationsKlasse
-                    + " " + freierSlot + " " + sendezeitpunkt + "}");
-            sendeSlot = freierSlot;
-            DataSink.gibAus(augabe);
             try {
+                // Restzeit des Frames schlafen
                 sleep(1000 - (System.currentTimeMillis() % 1000) + abweichung);
             } catch (InterruptedException e) {
                 e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
             }
+
+            sendeSlot = freierSlot;
         }
     }
 
