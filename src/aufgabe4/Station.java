@@ -1,7 +1,6 @@
 package aufgabe4;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 
 /**
  * Created with IntelliJ IDEA.
@@ -45,6 +44,7 @@ public class Station extends Thread {
 
             Nachricht nachricht = new Nachricht(new byte[34]);
             nachricht.setNutzdaten(nutzdatenEmpfaenger.getNutzdaten());
+            //nachricht.setNutzdaten("team 6+99".getBytes());
             nachricht.setStationsKlasse(stationsKlasse);
 
             try {
@@ -57,14 +57,19 @@ public class Station extends Thread {
             nachricht.setSendezeitpunkt(System.currentTimeMillis() + abweichung);
 
             Integer freierSlot = empfaenger.getFreienSlot();
-            nachricht.setReservierterSlot(freierSlot);
-
             if (freierSlot == Integer.MIN_VALUE) {
                 // keine Slots im aktuellen Frame verfuegbar, ueberspringen
-                continue;
+                String msg = "keine Slots frei";
+                try {
+                    System.out.write(msg.getBytes());
+                } catch (IOException e) {
+                    e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                }
+            } else {
+                nachricht.setReservierterSlot(freierSlot);
+                connection.send(nachricht.getBytes());
+                //DataSink.gibAus(nachricht.toString("<Station> gesendet"));
             }
-            connection.send(nachricht.getBytes());
-            DataSink.gibAus(nachricht.toString("<Station> gesendet"));
 
             try {
                 // Restzeit des Frames schlafen
@@ -84,10 +89,15 @@ public class Station extends Thread {
 
             new Station(connection1, new Empfaenger(connection2), args[3].charAt(0)).start();
 
-            System.out.println("Station gestartet mit den Parametern: ");
-            System.out.println("Netzwerkkarte " + args[0] + " Multicastadresse: " + args[1] + " Multicastport " + args[2] + " Klasse: " + args[3]);
+            System.out.write("Station gestartet mit den Parametern: ".getBytes());
+            String msg = "Netzwerkkarte " + args[0] + " Multicastadresse: " + args[1] + " Multicastport " + args[2] + " Klasse: " + args[3];
+            System.out.write(msg.getBytes());
         } catch (Exception e) {
-            System.out.println("Uebergebene Prarameter sind falsch!!!");
+            try {
+                System.out.write("Uebergebene Prarameter sind falsch!!!".getBytes());
+            } catch (IOException e1) {
+                e1.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            }
         }
     }
 }

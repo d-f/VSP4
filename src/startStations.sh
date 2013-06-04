@@ -13,7 +13,7 @@
 #              class of stations started (A or B)
 #              UTC offset (ms)
 #
-# Example:  startStations.sh eth2 225.10.1.2 16000 2 11 A 1
+# Example:  ./startStations.sh en1 225.10.1.2 16000 2 11 A 1
 # 
 #           will start ten class A stations numbered 2 to 11.
 #
@@ -33,7 +33,7 @@ UTCoffsetMs=$7
 #
 # Example: teamNo="2"
 ########################################################################################################
-teamNo=""
+teamNo="6"
 
 ########################################################################################################
 # TODO: Enter data source programme with full path, but WITHOUT parameters 
@@ -41,7 +41,7 @@ teamNo=""
 # Example:    dataSource="~/somewhere/DataSource"
 #         or  dataSource="java -cp . datasource.DataSource"
 ########################################################################################################
-dataSource=""
+dataSource="java -cp . datasource.DataSource"
 
 ########################################################################################################
 # TODO: Enter your station's start command.
@@ -49,7 +49,7 @@ dataSource=""
 #
 # Example: stationCmd="java aufgabe4.MyStation $interfaceName $mcastAddress $receivePort $stationClass"
 ########################################################################################################
-stationCmd=""
+stationCmd="java aufgabe4.Station $interfaceName $mcastAddress $receivePort $stationClass"
 
 
 printUsage() {
