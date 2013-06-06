@@ -15,33 +15,20 @@ public class Station extends Thread {
     private Empfaenger empfaenger;
     private char stationsKlasse;
     private int sendeSlot;
+    private long alteAbweichung = Long.MIN_VALUE;
 
-    public Station(Connection server, Empfaenger empfaenger, char stationsKlasse) {
+    public Station(Connection server, char stationsKlasse, Integer gesamtAbweichung) {
         this.stationsKlasse = stationsKlasse;
         this.connection = server;
-        this.empfaenger = empfaenger;
+        this.empfaenger = new Empfaenger(connection, gesamtAbweichung);
         this.nutzdatenEmpfaenger = new Nutzdaten();
-        this.sendeSlot = Integer.MIN_VALUE;
+        this.sendeSlot = 0;
     }
 
     public void run() {
-        try {
-            //Warten bis zum Frameanfang 1000ms - ((aktuelle Zeit + Abweichung) % 1000ms) - Zeit fuer das Wecken
-            sleep(1000 - (System.currentTimeMillis() % 1000) + empfaenger.getAbweichung());
-            // und erstes Frame nur hoeren
-            sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        initialisierung(0);
 
         while (true) {
-
-            if (sendeSlot == Integer.MIN_VALUE) {
-                sendeSlot = empfaenger.getFreienSlot();
-            }
-
-            long abweichung = empfaenger.getAbweichung();
-
             Nachricht nachricht = new Nachricht(new byte[34]);
             nachricht.setNutzdaten(nutzdatenEmpfaenger.getNutzdaten());
             //nachricht.setNutzdaten("team 6+99".getBytes());
@@ -49,31 +36,23 @@ public class Station extends Thread {
 
             try {
                 // Zeit bis zum Senden Schlafen
-                sleep(sendeSlot * 40 + abweichung + 20);
+                sleep(sendeSlot * 40 + 20);
             } catch (InterruptedException e) {
                 e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
             }
+            //if (empfaenger.isKollision()){
+            //    initialisierung(abweichung);
+            //}
 
-            nachricht.setSendezeitpunkt(System.currentTimeMillis() + abweichung);
+            nachricht.setSendezeitpunkt(empfaenger.getZeit());
 
             Integer freierSlot = empfaenger.getFreienSlot();
-            if (freierSlot == Integer.MIN_VALUE) {
-                // keine Slots im aktuellen Frame verfuegbar, ueberspringen
-                String msg = "keine Slots frei";
-                try {
-                    System.out.write(msg.getBytes());
-                } catch (IOException e) {
-                    e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-                }
-            } else {
-                nachricht.setReservierterSlot(freierSlot);
-                connection.send(nachricht.getBytes());
-                //DataSink.gibAus(nachricht.toString("<Station> gesendet"));
-            }
 
+            nachricht.setReservierterSlot(freierSlot);
+            connection.send(nachricht.getBytes());
             try {
                 // Restzeit des Frames schlafen
-                sleep(1000 - (System.currentTimeMillis() % 1000) + abweichung);
+                sleep(1000 - (empfaenger.synchrinisierteZeit() % 1000));
             } catch (InterruptedException e) {
                 e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
             }
@@ -82,12 +61,23 @@ public class Station extends Thread {
         }
     }
 
+    private void initialisierung(int abweichung) {
+        try {
+            sleep(1000);
+            //Warten bis zum Frameanfang 1000ms - ((aktuelle Zeit + Abweichung) % 1000ms) - Zeit fuer das Wecken
+            sleep(1000 - (empfaenger.synchrinisierteZeit() % 1000));
+            // und erstes Frame nur hoeren
+            sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
     public static void main(String... args) {
         try {
-            Connection connection1 = new Connection(args[0], args[1], Integer.parseInt(args[2]));
-            Connection connection2 = new Connection(args[0], args[1], Integer.parseInt(args[2]));
+            Connection connection = new Connection(args[0], args[1], Integer.parseInt(args[2]));
 
-            new Station(connection1, new Empfaenger(connection2), args[3].charAt(0)).start();
+            new Station(connection, args[3].charAt(0), Integer.parseInt(args[4])).start();
 
             System.out.write("Station gestartet mit den Parametern: ".getBytes());
             String msg = "Netzwerkkarte " + args[0] + " Multicastadresse: " + args[1] + " Multicastport " + args[2] + " Klasse: " + args[3];
