@@ -49,7 +49,7 @@ dataSource="java -cp . datasource.DataSource"
 #
 # Example: stationCmd="java aufgabe4.MyStation $interfaceName $mcastAddress $receivePort $stationClass"
 ########################################################################################################
-stationCmd="java aufgabe4.Station $interfaceName $mcastAddress $receivePort $stationClass"
+stationCmd="java aufgabe4.Station $interfaceName $mcastAddress $receivePort $stationClass $UTCoffsetMs | java datasink.DataSink"
 
 
 printUsage() {

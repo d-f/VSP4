@@ -57,7 +57,7 @@ public class Empfaenger extends Thread {
             // Akktualisierung der Abweichung wenn Nachricht von Station A
             // Mittel von der alten und neuen Abweichung
             if (nachricht.getStationsKlasse() == 'A') {
-                abweichung = (empfangszeit - nachricht.getSendezeit());
+                abweichung = (empfangszeit - nachricht.getSendezeit() + abweichung) / 2;
             }
 
             aktuelleFrameNummer = synchrinisierteZeit() / 1000;
@@ -76,27 +76,19 @@ public class Empfaenger extends Thread {
                 // dann Kollision
 
                 String msg = "--kollision im Frame: " + (aktuelleFrameNummer % 1000) + " Slot: " + aktuelleSlotNummer + nachricht.toString("");
-                try {
-                    System.out.write(msg.getBytes());
-                } catch (IOException e) {
-                    e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-                }
+                System.out.println(msg);
+
                 // Nachricht nicht auswerten und Rest ueberspringen
 
             } else {
 
                 String msg = nachricht.toString("emfpangen im Frame: " + (aktuelleFrameNummer % 1000) + " Slot: " + aktuelleSlotNummer + " Abweichung: " + abweichung);
-
-                try {
-                    System.out.write(msg.getBytes());
-                } catch (IOException e) {
-                    e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-                }
+                System.out.println(msg);
                 alteFrameNummer = aktuelleFrameNummer;
                 alteSlotNummer = aktuelleSlotNummer;
             }
 
-            kollisionen[(int)aktuelleSlotNummer] = true;
+            //kollisionen[(int)aktuelleSlotNummer] = true;
         }
     }
 

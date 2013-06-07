@@ -47,7 +47,7 @@ public class Station extends Thread {
             nachricht.setSendezeitpunkt(empfaenger.getZeit());
 
             Integer freierSlot = empfaenger.getFreienSlot();
-
+            //System.out.println("---" + freierSlot);
             nachricht.setReservierterSlot(freierSlot);
             connection.send(nachricht.getBytes());
             try {
