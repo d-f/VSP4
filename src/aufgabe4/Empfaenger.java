@@ -21,7 +21,7 @@ public class Empfaenger extends Thread {
 
     private boolean kollision = false;
     private int systemZeitAbweichung;
-    private boolean[] kollisionen = new boolean[25];
+    private boolean[] belegteSlots;
 
     private boolean[] freieSlots;
     private long abweichung;
@@ -41,13 +41,14 @@ public class Empfaenger extends Thread {
 
         this.freieSlots = new boolean[25];
         Arrays.fill(freieSlots, true);
+    this.belegteSlots = new boolean[25];
+	Arrays.fill(belegteSlots, false);
 
         start();
     }
 
     public void run() {
         while (true) {
-            synchronized (kollisionen) {
                 Nachricht nachricht = new Nachricht(connection.receive());
                 setFreienSlot(nachricht.getReserviertenSlot());
 
@@ -68,10 +69,11 @@ public class Empfaenger extends Thread {
                 if (alteFrameNummer < aktuelleFrameNummer) {
                     System.out.println(" ==================== ");
                     resetFreieSlots();
+	            resetBelegteSlots();
                 }
 
                 // wenn gleicher Frame und Slot
-                if (kollisionen[(int) aktuelleSlotNummer]) {
+                if (belegteSlots[(int) aktuelleSlotNummer]) {
                     // dann Kollision
 
                     String msg = "--kollision im Frame: " + (aktuelleFrameNummer % 1000) + " Slot: " + aktuelleSlotNummer + nachricht.toString("");
@@ -89,7 +91,6 @@ public class Empfaenger extends Thread {
 
                 //kollisionen[(int)aktuelleSlotNummer] = true;
             }
-        }
     }
 
     public long getZeit() {
@@ -102,21 +103,21 @@ public class Empfaenger extends Thread {
 
     public synchronized int getFreienSlot() {
         ArrayList<Integer> liste = new ArrayList<Integer>();
-        for (int i = 0; i < freieSlots.length; i++) {
-            if (freieSlots[i]) {
+        for (int i = 0; i < belegteSlots.length; i++) {
+            if (belegteSlots[i]) {
                 liste.add(i);
             }
         }
         Random random = new Random();
 
         return liste.get(random.nextInt(liste.size()));
-        /*
-        for(int i = 0; i < freieSlots.length; i++) {
+       /*
+        for(int i = 0; i < belegteSlots.length; i++) {
             if (freieSlots[i]) {
                 return i;
             }
         }
-        return 0;*/
+        return 0; */
     }
 
     public synchronized void setFreienSlot(int i) {
@@ -124,7 +125,15 @@ public class Empfaenger extends Thread {
     }
 
     public synchronized void resetFreieSlots() {
-        Arrays.fill(freieSlots, true);
+        Arrays.fill(freieSlots, false);
+    }
+
+    public synchronized void resetBelegteSlots(){
+        Arrays.fill(belegteSlots, false);
+    }
+
+    public synchronized void setBelegteSlots(int slot){
+        belegteSlots[slot] = true;
     }
 
 
