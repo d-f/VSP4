@@ -41,6 +41,7 @@ public class Empfaenger extends Thread {
 
         this.freieSlots = new boolean[25];
         Arrays.fill(freieSlots, true);
+
     this.belegteSlots = new boolean[25];
 	Arrays.fill(belegteSlots, false);
 
@@ -50,7 +51,7 @@ public class Empfaenger extends Thread {
     public void run() {
         while (true) {
                 Nachricht nachricht = new Nachricht(connection.receive());
-                setFreienSlot(nachricht.getReserviertenSlot());
+                setBelegteSlots(nachricht.getReserviertenSlot());
 
                 long empfangszeit = getZeit();
 
@@ -104,7 +105,7 @@ public class Empfaenger extends Thread {
     public synchronized int getFreienSlot() {
         ArrayList<Integer> liste = new ArrayList<Integer>();
         for (int i = 0; i < belegteSlots.length; i++) {
-            if (belegteSlots[i]) {
+            if (!belegteSlots[i]) {
                 liste.add(i);
             }
         }
