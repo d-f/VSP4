@@ -66,6 +66,7 @@ public class Empfaenger extends Thread {
 
                 // freie Slots fuer Reservierung zuruecksetzen wenn Frame zuende
                 if (alteFrameNummer < aktuelleFrameNummer) {
+                    System.out.println(" ==================== ");
                     resetFreieSlots();
                 }
 
