@@ -13,12 +13,12 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public class Empfaenger extends Thread {
     private Connection connection;
-    private ReentrantLock reentrantLock;
 
     private long aktuelleFrameNummer;
     private long alteFrameNummer;
     private long aktuelleSlotNummer;
     private long alteSlotNummer;
+
     private boolean kollision = false;
     private int systemZeitAbweichung;
     private boolean[] kollisionen = new boolean[25];
@@ -42,53 +42,52 @@ public class Empfaenger extends Thread {
         this.freieSlots = new boolean[25];
         Arrays.fill(freieSlots, true);
 
-        this.reentrantLock = new ReentrantLock();
         start();
     }
 
     public void run() {
         while (true) {
-            Nachricht nachricht = new Nachricht(connection.receive());
-            setFreienSlot(nachricht.getReserviertenSlot());
+            synchronized (kollisionen) {
+                Nachricht nachricht = new Nachricht(connection.receive());
+                setFreienSlot(nachricht.getReserviertenSlot());
 
-            long empfangszeit = getZeit();
+                long empfangszeit = getZeit();
 
 
-            // Akktualisierung der Abweichung wenn Nachricht von Station A
-            // Mittel von der alten und neuen Abweichung
-            if (nachricht.getStationsKlasse() == 'A') {
-                abweichung = (empfangszeit - nachricht.getSendezeit() + abweichung) / 2;
+                // Akktualisierung der Abweichung wenn Nachricht von Station A
+                // Mittel von der alten und neuen Abweichung
+                if (nachricht.getStationsKlasse() == 'A') {
+                    abweichung = (empfangszeit - nachricht.getSendezeit() + abweichung) / 2;
+                }
+
+                aktuelleFrameNummer = synchrinisierteZeit() / 1000;
+                aktuelleSlotNummer = (synchrinisierteZeit() % 1000) / 40;
+
+
+                // freie Slots fuer Reservierung zuruecksetzen wenn Frame zuende
+                if (alteFrameNummer < aktuelleFrameNummer) {
+                    resetFreieSlots();
+                }
+
+                // wenn gleicher Frame und Slot
+                if (kollisionen[(int) aktuelleSlotNummer]) {
+                    // dann Kollision
+
+                    String msg = "--kollision im Frame: " + (aktuelleFrameNummer % 1000) + " Slot: " + aktuelleSlotNummer + nachricht.toString("");
+                    System.out.println(msg);
+
+                    // Nachricht nicht auswerten und Rest ueberspringen
+
+                } else {
+
+                    String msg = nachricht.toString("emfpangen im Frame: " + (aktuelleFrameNummer % 1000) + " Slot: " + aktuelleSlotNummer + " Abweichung: " + abweichung);
+                    System.out.println(msg);
+                    alteFrameNummer = aktuelleFrameNummer;
+                    alteSlotNummer = aktuelleSlotNummer;
+                }
+
+                //kollisionen[(int)aktuelleSlotNummer] = true;
             }
-
-            aktuelleFrameNummer = synchrinisierteZeit() / 1000;
-            aktuelleSlotNummer = (synchrinisierteZeit() % 1000) / 40;
-
-
-
-            // freie Slots fuer Reservierung zuruecksetzen wenn Frame zuende
-            if (alteFrameNummer < aktuelleFrameNummer) {
-                resetFreieSlots();
-                Arrays.fill(kollisionen, false);
-            }
-
-            // wenn gleicher Frame und Slot
-            if (kollisionen[(int)aktuelleSlotNummer]) {
-                // dann Kollision
-
-                String msg = "--kollision im Frame: " + (aktuelleFrameNummer % 1000) + " Slot: " + aktuelleSlotNummer + nachricht.toString("");
-                System.out.println(msg);
-
-                // Nachricht nicht auswerten und Rest ueberspringen
-
-            } else {
-
-                String msg = nachricht.toString("emfpangen im Frame: " + (aktuelleFrameNummer % 1000) + " Slot: " + aktuelleSlotNummer + " Abweichung: " + abweichung);
-                System.out.println(msg);
-                alteFrameNummer = aktuelleFrameNummer;
-                alteSlotNummer = aktuelleSlotNummer;
-            }
-
-            //kollisionen[(int)aktuelleSlotNummer] = true;
         }
     }
 
@@ -119,14 +118,13 @@ public class Empfaenger extends Thread {
         return 0;*/
     }
 
-    public synchronized void setFreienSlot(int i){
+    public synchronized void setFreienSlot(int i) {
         freieSlots[i] = false;
     }
 
-    public synchronized void resetFreieSlots(){
-        Arrays.fill(freieSlots,true);
+    public synchronized void resetFreieSlots() {
+        Arrays.fill(freieSlots, true);
     }
-
 
 
     public boolean isKollision() {
