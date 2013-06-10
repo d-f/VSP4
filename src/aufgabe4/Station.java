@@ -15,7 +15,6 @@ public class Station extends Thread {
     private Empfaenger empfaenger;
     private char stationsKlasse;
     private int sendeSlot;
-    private long alteAbweichung = Long.MIN_VALUE;
 
     public Station(Connection server, char stationsKlasse, Integer gesamtAbweichung) {
         this.stationsKlasse = stationsKlasse;
@@ -26,7 +25,7 @@ public class Station extends Thread {
     }
 
     public void run() {
-        initialisierung(0);
+        initialisierung();
 
         while (true) {
             Nachricht nachricht = new Nachricht(new byte[34]);
@@ -40,13 +39,16 @@ public class Station extends Thread {
             } catch (InterruptedException e) {
                 e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
             }
-            //if (empfaenger.isKollision()){
-            //    initialisierung(abweichung);
-            //}
+
+            Integer freierSlot = empfaenger.getFreienSlot();
+
+            //if (empfaenger.isKollision()) {
+            //    initialisierung();
+            //} else {
 
             nachricht.setSendezeitpunkt(empfaenger.getZeit());
 
-            Integer freierSlot = empfaenger.getFreienSlot();
+
             //System.out.println("---" + freierSlot);
             nachricht.setReservierterSlot(freierSlot);
             connection.send(nachricht.getBytes());
@@ -58,12 +60,13 @@ public class Station extends Thread {
             }
 
             sendeSlot = freierSlot;
+            //}
         }
     }
 
-    private void initialisierung(int abweichung) {
+    private void initialisierung() {
         try {
-            sleep(1000);
+            System.out.println("Initialisierung");
             //Warten bis zum Frameanfang 1000ms - ((aktuelle Zeit + Abweichung) % 1000ms) - Zeit fuer das Wecken
             sleep(1000 - (empfaenger.synchrinisierteZeit() % 1000));
             // und erstes Frame nur hoeren
@@ -79,15 +82,12 @@ public class Station extends Thread {
 
             new Station(connection, args[3].charAt(0), Integer.parseInt(args[4])).start();
 
-            System.out.write("Station gestartet mit den Parametern: ".getBytes());
+            System.out.println("Station gestartet mit den Parametern: ");
             String msg = "Netzwerkkarte " + args[0] + " Multicastadresse: " + args[1] + " Multicastport " + args[2] + " Klasse: " + args[3];
-            System.out.write(msg.getBytes());
+            System.out.println(msg);
         } catch (Exception e) {
-            try {
-                System.out.write("Uebergebene Prarameter sind falsch!!!".getBytes());
-            } catch (IOException e1) {
-                e1.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-            }
+            System.out.println("Uebergebene Prarameter sind falsch!!!");
+            System.exit(0);
         }
     }
 }
