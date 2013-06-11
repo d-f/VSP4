@@ -55,6 +55,7 @@ public class Station extends Thread {
 
             //System.out.println("---" + freierSlot);
             nachricht.setReservierterSlot(freierSlot);
+            empfaenger.setBelegteSlots(freierSlot);
             connection.send(nachricht.getBytes());
             try {
                 // Restzeit des Frames schlafen
