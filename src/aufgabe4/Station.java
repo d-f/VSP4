@@ -43,7 +43,6 @@ public class Station extends Thread {
             Integer freierSlot = empfaenger.getFreienSlot();
 
             if (empfaenger.isKollision()) {
-
                 sendeSlot = empfaenger.getFreienSlot();
 
             }
@@ -53,7 +52,6 @@ public class Station extends Thread {
 
             //System.out.println("---" + freierSlot);
             nachricht.setReservierterSlot(freierSlot);
-            empfaenger.setBelegteSlots(freierSlot);
             connection.send(nachricht.getBytes());
             try {
                 // Restzeit des Frames schlafen
