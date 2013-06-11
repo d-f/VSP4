@@ -81,10 +81,11 @@ public class Empfaenger extends Thread {
                 }
                 String msg = nachricht.toString("emfpangen im Slot: " + aktuelleSlotNummer + " Abweichung: " + abweichung);
                 System.out.println(msg);
-                alteFrameNummer = aktuelleFrameNummer;
-                alteSlotNummer = aktuelleSlotNummer;
+
             }
             //kollisionen[(int)aktuelleSlotNummer] = true;
+            alteFrameNummer = aktuelleFrameNummer;
+            alteSlotNummer = aktuelleSlotNummer;
         }
     }
 
