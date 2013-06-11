@@ -43,12 +43,10 @@ public class Station extends Thread {
             Integer freierSlot = empfaenger.getFreienSlot();
 
             if (empfaenger.isKollision()) {
-                System.out.println("Initialisierung");
 
-                initialisierung();
-                continue;
+                sendeSlot = empfaenger.getFreienSlot();
+
             }
-            else {
 
             nachricht.setSendezeitpunkt(empfaenger.getZeit());
 
@@ -65,7 +63,6 @@ public class Station extends Thread {
             }
 
             sendeSlot = freierSlot;
-            }
         }
     }
 
