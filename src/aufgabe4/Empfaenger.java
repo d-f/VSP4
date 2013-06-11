@@ -81,7 +81,6 @@ public class Empfaenger extends Thread {
                 }
                 String msg = nachricht.toString("emfpangen im Slot: " + aktuelleSlotNummer + " Abweichung: " + abweichung);
                 System.out.println(msg);
-
             }
             //kollisionen[(int)aktuelleSlotNummer] = true;
             alteFrameNummer = aktuelleFrameNummer;
@@ -94,7 +93,7 @@ public class Empfaenger extends Thread {
     }
 
     public synchronized int getFreienSlot() {
-        /*ArrayList<Integer> liste = new ArrayList<Integer>();
+        ArrayList<Integer> liste = new ArrayList<Integer>();
         for (int i = 0; i < belegteSlots.length; i++) {
             if (!belegteSlots[i]) {
                 liste.add(i);
@@ -104,13 +103,13 @@ public class Empfaenger extends Thread {
         int slot = liste.get(random.nextInt(liste.size()));
         setBelegteSlots(slot);
         return slot;
-        */
-        for(int i = 0; i < belegteSlots.length; i++) {
+
+        /*for(int i = 0; i < belegteSlots.length; i++) {
             if (!belegteSlots[i]) {
                 return i;
             }
         }
-        return 0;
+        return 0;*/
     }
 
     public synchronized void resetBelegteSlots() {
