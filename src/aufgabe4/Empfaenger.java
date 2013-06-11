@@ -105,7 +105,7 @@ public class Empfaenger extends Thread {
         return slot;
         */
         for(int i = 0; i < belegteSlots.length; i++) {
-            if (belegteSlots[i]) {
+            if (!belegteSlots[i]) {
                 return i;
             }
         }
