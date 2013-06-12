@@ -22,6 +22,9 @@ public class Empfaenger extends Thread {
     private boolean kollision = false;
     private int systemZeitAbweichung;
     private boolean[] belegteSlots;
+    private String alteNachricht = "";
+    private String neueNachricht = "";
+
 
     private long abweichung;
 
@@ -47,14 +50,17 @@ public class Empfaenger extends Thread {
     public void run() {
         while (true) {
             Nachricht nachricht = new Nachricht(connection.receive());
+            long empfangszeit = getZeit();
+
+            neueNachricht = nachricht.getNachrichtenKopf();
+
             setBelegteSlot(nachricht.getReserviertenSlot());
 
-            long empfangszeit = getZeit();
 
             aktuelleFrameNummer = synchrinisierteZeit() / 1000;
             aktuelleSlotNummer = (synchrinisierteZeit() % 1000) / 40;
 
-            if (alteSlotNummer < aktuelleSlotNummer){
+            if (alteSlotNummer < aktuelleSlotNummer) {
                 kollision = false;
             }
 
@@ -65,14 +71,12 @@ public class Empfaenger extends Thread {
             }
 
             // wenn gleicher Frame und Slot
-            if (alteFrameNummer == aktuelleFrameNummer && alteSlotNummer == aktuelleSlotNummer) {
+            if (alteFrameNummer == aktuelleFrameNummer && alteSlotNummer == aktuelleSlotNummer && alteNachricht.equals(neueNachricht)) {
                 // dann Kollision
                 kollision = true;
                 String msg = "--kollision im Slot: " + aktuelleSlotNummer + nachricht.toString("");
                 System.out.println(msg);
-
                 // Nachricht nicht auswerten und Rest ueberspringen
-
             } else {
                 kollision = false;
                 // Akktualisierung der Abweichung wenn Nachricht von Station A
@@ -86,6 +90,7 @@ public class Empfaenger extends Thread {
             //kollisionen[(int)aktuelleSlotNummer] = true;
             alteFrameNummer = aktuelleFrameNummer;
             alteSlotNummer = aktuelleSlotNummer;
+            alteNachricht = neueNachricht;
         }
     }
 
@@ -106,7 +111,7 @@ public class Empfaenger extends Thread {
         setBelegteSlot(slot);
         return slot;
         */
-        for(int i = 0; i < belegteSlots.length; i++) {
+        for (int i = 0; i < belegteSlots.length; i++) {
             if (!belegteSlots[i]) {
                 setBelegteSlot(i);
                 return i;
