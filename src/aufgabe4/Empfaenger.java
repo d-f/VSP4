@@ -47,7 +47,7 @@ public class Empfaenger extends Thread {
     public void run() {
         while (true) {
             Nachricht nachricht = new Nachricht(connection.receive());
-            setBelegteSlots(nachricht.getReserviertenSlot());
+            setBelegteSlot(nachricht.getReserviertenSlot());
 
             long empfangszeit = getZeit();
 
@@ -74,6 +74,7 @@ public class Empfaenger extends Thread {
                 // Nachricht nicht auswerten und Rest ueberspringen
 
             } else {
+                kollision = false;
                 // Akktualisierung der Abweichung wenn Nachricht von Station A
                 // Mittel von der alten und neuen Abweichung
                 if (nachricht.getStationsKlasse() == 'A') {
@@ -93,6 +94,7 @@ public class Empfaenger extends Thread {
     }
 
     public synchronized int getFreienSlot() {
+        /*
         ArrayList<Integer> liste = new ArrayList<Integer>();
         for (int i = 0; i < belegteSlots.length; i++) {
             if (!belegteSlots[i]) {
@@ -101,22 +103,23 @@ public class Empfaenger extends Thread {
         }
         Random random = new Random();
         int slot = liste.get(random.nextInt(liste.size()));
-        setBelegteSlots(slot);
+        setBelegteSlot(slot);
         return slot;
-
-        /*for(int i = 0; i < belegteSlots.length; i++) {
+        */
+        for(int i = 0; i < belegteSlots.length; i++) {
             if (!belegteSlots[i]) {
+                setBelegteSlot(i);
                 return i;
             }
         }
-        return 0;*/
+        return 0;
     }
 
     public synchronized void resetBelegteSlots() {
         Arrays.fill(belegteSlots, false);
     }
 
-    public synchronized void setBelegteSlots(int slot) {
+    public synchronized void setBelegteSlot(int slot) {
         belegteSlots[slot] = true;
     }
 
