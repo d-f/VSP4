@@ -15,12 +15,13 @@ public class Station extends Thread {
     private Empfaenger empfaenger;
     private char stationsKlasse;
     private int sendeSlot;
+    private boolean debug = false;
 
     public Station(Connection server, char stationsKlasse, Integer gesamtAbweichung) {
         this.stationsKlasse = stationsKlasse;
         this.connection = server;
-        this.empfaenger = new Empfaenger(connection, gesamtAbweichung);
         this.nutzdatenEmpfaenger = new Nutzdaten();
+        this.empfaenger = new Empfaenger(connection, gesamtAbweichung, new String(nutzdatenEmpfaenger.getNutzdaten()));
         this.sendeSlot = 0;
     }
 
@@ -40,33 +41,41 @@ public class Station extends Thread {
                 e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
             }
 
-            Integer freierSlot = empfaenger.getFreienSlot();
 
-            if (empfaenger.isKollision()) {
-                initialisierung();
-                sendeSlot = empfaenger.getFreienSlot();
-                continue;
-            }
+
+            //if (empfaenger.isKollision()) {
+            //    initialisierung();
+            //    sendeSlot = empfaenger.getFreienSlot();
+            //    continue;
+            //}
 
             nachricht.setSendezeitpunkt(empfaenger.getZeit());
 
             //System.out.println("---" + freierSlot);
+
+            Integer freierSlot = empfaenger.getFreienSlot(debug);
             nachricht.setReservierterSlot(freierSlot);
-
-            if ((empfaenger.synchrinisierteZeit()%1000)/40 != sendeSlot) {
-                initialisierung();
-                continue;
+            if (empfaenger.isKollision() || (empfaenger.synchrinisierteZeit()%1000)/40 != sendeSlot) {
+                sleepUntilNextFrame(true);
+                sendeSlot = empfaenger.getFreienSlot(debug);
+            } else {
+                empfaenger.setBelegteSlot(freierSlot);
+                connection.send(nachricht.getBytes());
+                sleepUntilNextFrame(false);
+                sendeSlot = freierSlot;
             }
+        }
+    }
 
-            connection.send(nachricht.getBytes());
-            try {
-                // Restzeit des Frames schlafen
-                sleep(1000 - (empfaenger.synchrinisierteZeit() % 1000));
-            } catch (InterruptedException e) {
-                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+    private void sleepUntilNextFrame(boolean loop){
+        try {
+            // Restzeit des Frames schlafen
+            sleep(1000 - (empfaenger.synchrinisierteZeit() % 1000));
+            if(loop && (empfaenger.synchrinisierteZeit() % 1000) / 10 != 0){
+                sleepUntilNextFrame(true);
             }
-
-            sendeSlot = freierSlot;
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
     }
 
