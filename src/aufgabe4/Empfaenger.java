@@ -81,7 +81,7 @@ public class Empfaenger extends Thread {
                 // Nachricht nicht auswerten und Rest ueberspringen
             } else {
                 kollision = false;
-                System.out.println(Arrays.toString(belegteSlots) +  nachricht.getReserviertenSlot() );
+                //System.out.println(Arrays.toString(belegteSlots) +  nachricht.getReserviertenSlot() );
                 String msg = nachricht.toString("emfpangen im Slot: " + aktuelleSlotNummer + " Abweichung: " + abweichung);
                 System.out.println(msg);
                 // Akktualisierung der Abweichung wenn Nachricht von Station A
