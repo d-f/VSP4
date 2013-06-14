@@ -18,7 +18,11 @@
 #           will start ten class A stations numbered 2 to 11.
 #
 # To use this script assign the appropriate values to the variables below.
-#
+#    kill $(ps aux | grep 'DataSource' | awk '{print $2}')
+#    ./startStations.sh eth1 225.10.1.2 16000 1 24  A 0
+#    java datasource.DataSource 06 25 | java aufgabe4.Station eth1 225.10.1.2 16000 A 0
+#    ./STDMAsniffer 225.10.1.2 16000 eth1 -adapt
+#    cd VSP4/VSP4-1/out/production/VSP4-1/cd sniffer/64bit/
 #
 interfaceName=$1
 mcastAddress=$2
