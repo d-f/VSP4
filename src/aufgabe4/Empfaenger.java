@@ -53,15 +53,9 @@ public class Empfaenger extends Thread {
         while (true) {
             Nachricht nachricht = new Nachricht(connection.receive());
             neueNachricht = nachricht.getNachrichtenKopf();
-            aktuelleFrameNummer = synchrinisierteZeit() / 1000;
-            aktuelleSlotNummer = (synchrinisierteZeit() % 1000) / 40;
 
-            // freie Slots fuer Reservierung zuruecksetzen wenn Frame zuende
-            if (alteFrameNummer < aktuelleFrameNummer) {
-                System.out.println("==================== " + aktuelleFrameNummer + " ====================");
-                kollision = false;
-                resetBelegteSlots();
-            }
+            checkFrame();
+
 
             long empfangszeit = getZeit();
             setBelegteSlot(nachricht.getReserviertenSlot());
@@ -94,6 +88,17 @@ public class Empfaenger extends Thread {
             alteFrameNummer = aktuelleFrameNummer;
             alteSlotNummer = aktuelleSlotNummer;
             alteNachricht = neueNachricht;
+        }
+    }
+
+    public void checkFrame() {
+        aktuelleFrameNummer = synchrinisierteZeit() / 1000;
+        aktuelleSlotNummer = (synchrinisierteZeit() % 1000) / 40;
+        // freie Slots fuer Reservierung zuruecksetzen wenn Frame zuende
+        if (alteFrameNummer < aktuelleFrameNummer) {
+            System.out.println("==================== " + aktuelleFrameNummer + " ====================");
+            kollision = false;
+            resetBelegteSlots();
         }
     }
 

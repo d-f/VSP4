@@ -43,22 +43,28 @@ public class Station extends Thread {
 
 
 
+
             //if (empfaenger.isKollision()) {
             //    initialisierung();
             //    sendeSlot = empfaenger.getFreienSlot();
             //    continue;
             //}
 
-            nachricht.setSendezeitpunkt(empfaenger.getZeit());
+            if (stationsKlasse == 'A'){
+                nachricht.setSendezeitpunkt(empfaenger.getZeit());
+            } else {
+                nachricht.setSendezeitpunkt(empfaenger.synchrinisierteZeit());
+            }
 
             //System.out.println("---" + freierSlot);
 
-            Integer freierSlot = empfaenger.getFreienSlot(debug);
-            nachricht.setReservierterSlot(freierSlot);
+            empfaenger.checkFrame();
             if (empfaenger.isKollision() || (empfaenger.synchrinisierteZeit()%1000)/40 != sendeSlot) {
                 sleepUntilNextFrame(true);
                 sendeSlot = empfaenger.getFreienSlot(debug);
             } else {
+                Integer freierSlot = empfaenger.getFreienSlot(debug);
+                nachricht.setReservierterSlot(freierSlot);
                 empfaenger.setBelegteSlot(freierSlot);
                 connection.send(nachricht.getBytes());
                 sleepUntilNextFrame(false);
